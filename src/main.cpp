@@ -11,7 +11,7 @@ int main()
     // create the window
     sf::RenderWindow window(sf::VideoMode(800, 600), "SFML TEST", sf::Style::Default, settings);
 	
-	sf::CircleShape shape(50);
+	sf::CircleShape shape(100);
 	shape.setFillColor(sf::Color(100,250,50));
 
     // run the program as long as the window is open
