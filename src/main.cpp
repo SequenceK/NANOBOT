@@ -11,8 +11,14 @@ int main()
     // create the window
     sf::RenderWindow window(sf::VideoMode(800, 600), "SFML TEST", sf::Style::Default, settings);
 	
-	sf::CircleShape shape(100);
-	shape.setFillColor(sf::Color(100,250,50));
+	sf::Texture texture;
+	texture.loadFromFile("../data/lava.jpg");
+	
+	
+	
+	
+	sf::Sprite s;
+	s.setTexture(texture);
 
     // run the program as long as the window is open
     while (window.isOpen())
@@ -31,7 +37,7 @@ int main()
 
         // draw everything here...
         // window.draw(...);
-		window.draw(shape);
+		window.draw(s);
 
         // end the current frame
         window.display();
