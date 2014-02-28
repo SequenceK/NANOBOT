@@ -10,12 +10,13 @@ int main()
 {
 	sf::Clock clock;
 	sf::ContextSettings settings;
-	settings.antialiasingLevel = 8;
+	settings.antialiasingLevel = 0;
 	
 	
     // create the window
-    sf::RenderWindow window(sf::VideoMode(G::WIN_W, G::WIN_H), "SFML TEST", sf::Style::Default, settings);
-	window.setFramerateLimit(30);
+    sf::RenderWindow window(sf::VideoMode(G::WIN_W, G::WIN_H), "SFML TEST", sf::Style::Fullscreen, settings);
+	window.setVerticalSyncEnabled(true);
+	window.setFramerateLimit(60);
 	
 	sf::Texture texture;
 	texture.loadFromFile("../data/lava.jpg");
@@ -92,14 +93,14 @@ int main()
 		if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
 				//pSprite->move( -speed*dt , 0 );
 		}
-		game.update(dt);
+		game.update(dt, window);
         // clear the window with black color
         window.clear(sf::Color::Black);
 
         // draw everything here...
         // window.draw(...);
 		//window.draw(s);
-		window.draw(game.rSys.components[game.player]->sprite);
+		//window.draw(game.rSys.components[game.player]->sprite);
 		game.render(window);
         // end the current frame
         window.display();

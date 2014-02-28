@@ -35,8 +35,8 @@ namespace G {
 
 	typedef unsigned long EntityId;
 	static EntityId INDEX = 1;
-	static int WIN_H = 600;
-	static int WIN_W = 800;
+	static int WIN_H = 768;
+	static int WIN_W = 1366;
 
 	
 	class Component {
@@ -44,7 +44,7 @@ namespace G {
 			Component(EntityId id) : owner(id) {};
 			EntityId owner;
 	};
-
+	
 	template <typename C> class System {
 		public:
 			std::map<EntityId, C * > components;
@@ -61,15 +61,23 @@ namespace G {
 			PositionComponent * position;
 			sf::Sprite sprite;
 			sf::Texture texture;
+			float offsetX=0, offsetY=0;
 			RenderComponent(const std::string & filename, System<PositionComponent>& posSys, EntityId id) : Component(id), position(posSys.components[owner]) {
 				texture.loadFromFile(filename);
 				sprite.setTexture(texture);
-				sprite.setPosition(position->x, position->y);
+				sprite.setPosition(position->x + offsetX, position->y + offsetY);
+			};
+			RenderComponent(float ox, float oy, const std::string & filename, System<PositionComponent>& posSys, EntityId id) : offsetX(ox), offsetY(oy), Component(id), position(posSys.components[owner]) {
+				texture.loadFromFile(filename);
+				sprite.setTexture(texture);
+				sprite.setPosition(position->x + offsetX, position->y + offsetY);
 			};
 			
 			void update() {
-				sprite.setPosition(position->x, position->y);
+				sprite.setPosition(position->x + offsetX, position->y + offsetY);
 			};
+			
+			
 	};
 	
 	class MovementComponent : public Component {
@@ -86,8 +94,8 @@ namespace G {
 				}
 				position->x += vx*dt;
 				position->y += vy*dt;
-				vx += ax - vx*drag;
-				vy += ay - vy*drag;
+				vx += ax/dt - vx*drag;
+				vy += ay/dt - vy*drag;
 				if((std::abs(vx) > std::abs(maxVx))) {
 					if( vx < 0 ){
 						vx = -maxVx;
@@ -105,12 +113,22 @@ namespace G {
 			};
 	};
 	
+	class HitboxComponent : public Component {
+		public :
+			PositionComponent * position;
+			float offsetX=0,offsetY=0;
+			int width, height;
+			HitboxComponent(float ox, float oy, int w, int h, System<PositionComponent>& posSys, EntityId id) : 
+			Component(id), position(posSys.components[id]),	offsetX(ox), offsetY(oy), width(w), height(h) {
+			};
+	};	
+	
 	//class InputComponent
 	
 	
 	class Game {
 		public:
-		
+			EntityId eIndex = 0;
 			System<PositionComponent> pSys;
 			System<RenderComponent> rSys;
 			System<MovementComponent> mSys;
@@ -118,9 +136,13 @@ namespace G {
 			sf::RenderWindow * window;
 			
 			
-			void update(float dt);
+			void update(float dt, sf::RenderWindow& window);
 			void init();
 			void render(sf::RenderWindow& window);
+			EntityId createId(){
+				eIndex++;
+				return eIndex;
+			};
 	};
 	
 	
