@@ -93,7 +93,7 @@ int main()
 		if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
 				//pSprite->move( -speed*dt , 0 );
 		}
-		game.update(dt, window);
+		
         // clear the window with black color
         window.clear(sf::Color::Black);
 
@@ -101,6 +101,7 @@ int main()
         // window.draw(...);
 		//window.draw(s);
 		//window.draw(game.rSys.components[game.player]->sprite);
+		game.update(dt, window);
 		game.render(window);
         // end the current frame
         window.display();

@@ -1,5 +1,6 @@
 #include "game.hpp"
 #include "entities.hpp"
+#include "system.hpp"
 #include <vector>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
@@ -33,6 +34,7 @@ void Game::init() {
 	this->pSys.components[player] =  new PositionComponent(20,20,player);
 	this->rSys.components[player] = new RenderComponent("../data/face.png", pSys, player);
 	this->mSys.components[player] = new MovementComponent(400, 400, 0.3,pSys, player);
+	this->hbSys.components[player] = new HitboxComponent(0,0,32,32,this->pSys,player);
 	
 	//this->rSys.components[player]->sprite.setScale(2,2);
 	
@@ -75,7 +77,32 @@ void Game::update(float dt, sf::RenderWindow& window) {
 	for (auto it = this->mSys.components.begin(); it != this->mSys.components.end(); it++) {
 		it->second->update(dt);
 	}
+	QuadTree qt(sf::Rect<float>(0,0,1366,768), 1);
+	for (auto it = this->hbSys.components.begin(); it != this->hbSys.components.end(); it++) {
+		qt.insert(this->hbSys, it->second->owner);
+	}
+	std::vector<EntityId> toCheck;
+	toCheck = qt.retreive(toCheck, (*this->hbSys.components[player]));
 	
+	for (int i = 0; i < toCheck.size(); i++) {
+		//std::cout <<"checking: " << toCheck[i] << "\n";
+		if(overlap((*this->hbSys.components[player]), (*this->hbSys.components[toCheck[i]])) && player != toCheck[i] )
+		{
+			this->hbSys.components[player]->overlaped = true;
+			//this->rSys.components[player]->sprite.setColor(sf::Color(0, 255, 0));
+		} else {
+			//this->rSys.components[player]->sprite.setColor(sf::Color(255, 255, 255));
+		}
+	}
+	if(this->hbSys.components[player]->overlaped)
+	{
+		this->rSys.components[player]->sprite.setColor(sf::Color(0, 255, 0));
+	} else {
+		this->rSys.components[player]->sprite.setColor(sf::Color(255, 255, 255));
+	}
+	this->hbSys.components[player]->overlaped = false;
+	qt.render(window);
+	qt.clear();
 	if(this->pSys.components[player]->x < 0) {
 		this->pSys.components[player]->x = 0;
 	}

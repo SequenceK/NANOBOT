@@ -53,7 +53,20 @@ namespace G {
 	class PositionComponent : public Component {
 		public:
 			float x, y;
+			float dx, dy;
+			bool changed;
 			PositionComponent(float xx, float yy, EntityId id) : x(xx), y(yy), Component(id) {};
+			void setPosition(float xx, float yy) {
+				x = xx;
+				y = yy;
+				if( dx != x || dy != y) {
+					changed = true;
+				} else {
+					changed = false;
+				}
+				dx = x;
+				dy = y;
+			};
 	};
 	
 	class RenderComponent : public Component {
@@ -92,8 +105,7 @@ namespace G {
 					ax = 0;
 					ay = 0;
 				}
-				position->x += vx*dt;
-				position->y += vy*dt;
+				position->setPosition(position->x + vx*dt, position->y + vy*dt);
 				vx += ax/dt - vx*drag;
 				vy += ay/dt - vy*drag;
 				if((std::abs(vx) > std::abs(maxVx))) {
@@ -117,10 +129,12 @@ namespace G {
 		public :
 			PositionComponent * position;
 			float offsetX=0,offsetY=0;
-			int width, height;
-			HitboxComponent(float ox, float oy, int w, int h, System<PositionComponent>& posSys, EntityId id) : 
+			float width, height;
+			bool overlaped;
+			HitboxComponent(float ox, float oy, float w, float h, System<PositionComponent>& posSys, EntityId id) : 
 			Component(id), position(posSys.components[id]),	offsetX(ox), offsetY(oy), width(w), height(h) {
 			};
+			
 	};	
 	
 	//class InputComponent
@@ -132,6 +146,7 @@ namespace G {
 			System<PositionComponent> pSys;
 			System<RenderComponent> rSys;
 			System<MovementComponent> mSys;
+			System<HitboxComponent> hbSys;
 			EntityId player;
 			sf::RenderWindow * window;
 			
