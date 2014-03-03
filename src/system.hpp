@@ -11,7 +11,7 @@ using namespace G;
 
 class QuadTree {
 	private:
-		int MAX_ENTITIES = 4;
+		int MAX_ENTITIES = 8;
 		int MAX_LEVELS = 5;
 		int level;
 		std::vector<EntityId> entities;
@@ -139,86 +139,34 @@ class QuadTree {
 			//std::cout << "ENTITIES SIZE: " << entities.size() << " LEVEL: " << level << "\n";
 		};
 		
-		std::vector<EntityId> retreive(std::vector<EntityId> returnEntities, HitboxComponent& rect) {
+		std::vector<EntityId> retreive(std::vector<EntityId>& returnEntities, HitboxComponent& rect) {
 			int index = getIndex(rect);
 			std::vector<EntityId> holder;
 			if(index != -1 && nodes[0] != nullptr) {
-				holder = nodes[index]->retreive(returnEntities, rect);
-				for(int i = 0; i < holder.size(); i++) {
-					returnEntities.push_back(holder[i]);
-					//std::cout << entities[i] << "\n";
-				}
+				nodes[index]->retreive(returnEntities, rect);
 			} else if (index == -1 && nodes[0] != nullptr)
 			{
 				if(getIndex(rect.position->x, rect.position->y) == 0 && getIndex(rect.position->x+rect.width, rect.position->y+rect.height) == 3) {
-					holder = nodes[getIndex(rect.position->x, rect.position->y)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
-					holder = nodes[getIndex(rect.position->x+rect.width, rect.position->y)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
-					holder = nodes[getIndex(rect.position->x, rect.position->y+rect.height)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
-					holder = nodes[getIndex(rect.position->x+rect.width, rect.position->y+rect.height)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
+					nodes[getIndex(rect.position->x, rect.position->y)]->retreive(returnEntities, rect);
+					nodes[getIndex(rect.position->x+rect.width, rect.position->y)]->retreive(returnEntities, rect);
+					nodes[getIndex(rect.position->x, rect.position->y+rect.height)]->retreive(returnEntities, rect);
+					nodes[getIndex(rect.position->x+rect.width, rect.position->y+rect.height)]->retreive(returnEntities, rect);
 				}
 				if(getIndex(rect.position->x, rect.position->y) == 0 && getIndex(rect.position->x+rect.width, rect.position->y+rect.height) == 2) {
-					holder = nodes[getIndex(rect.position->x, rect.position->y)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
-					holder = nodes[getIndex(rect.position->x, rect.position->y+rect.height)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
+					nodes[getIndex(rect.position->x, rect.position->y)]->retreive(returnEntities, rect);
+					nodes[getIndex(rect.position->x, rect.position->y+rect.height)]->retreive(returnEntities, rect);
 				}
 				if(getIndex(rect.position->x, rect.position->y) == 0 && getIndex(rect.position->x+rect.width, rect.position->y+rect.height) == 1) {
-					holder = nodes[getIndex(rect.position->x, rect.position->y)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
-					holder = nodes[getIndex(rect.position->x+rect.width, rect.position->y)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
+					nodes[getIndex(rect.position->x, rect.position->y)]->retreive(returnEntities, rect);
+					nodes[getIndex(rect.position->x+rect.width, rect.position->y)]->retreive(returnEntities, rect);
 				}
 				if(getIndex(rect.position->x, rect.position->y) == 2 && getIndex(rect.position->x+rect.width, rect.position->y+rect.height) == 3) {
-					holder = nodes[getIndex(rect.position->x, rect.position->y+rect.height)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
-					holder = nodes[getIndex(rect.position->x+rect.width, rect.position->y+rect.height)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
+					nodes[getIndex(rect.position->x, rect.position->y+rect.height)]->retreive(returnEntities, rect);
+					nodes[getIndex(rect.position->x+rect.width, rect.position->y+rect.height)]->retreive(returnEntities, rect);
 				}
 				if(getIndex(rect.position->x, rect.position->y) == 1 && getIndex(rect.position->x+rect.width, rect.position->y+rect.height) == 3) {
-					holder = nodes[getIndex(rect.position->x+rect.width, rect.position->y)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
-					holder = nodes[getIndex(rect.position->x+rect.width, rect.position->y+rect.height)]->retreive(returnEntities, rect);
-					for(int i = 0; i < holder.size(); i++) {
-						returnEntities.push_back(holder[i]);
-						//std::cout << entities[i] << "\n";
-					}
+					nodes[getIndex(rect.position->x+rect.width, rect.position->y)]->retreive(returnEntities, rect);
+					nodes[getIndex(rect.position->x+rect.width, rect.position->y+rect.height)]->retreive(returnEntities, rect);
 				}
 				
 			}
@@ -250,7 +198,7 @@ class QuadTree {
 				window.draw(hL);
 				hL.setPosition(bounds.left+(bounds.width/2), bounds.top);
 				window.draw(hL);
-				hL.setPosition(bounds.left+(bounds.width), bounds.top+(bounds.height));
+				hL.setPosition(bounds.left+(bounds.width), bounds.top);
 				window.draw(hL);
 			}
 			if(nodes[0] != nullptr)
@@ -272,6 +220,27 @@ bool overlap(HitboxComponent o1, HitboxComponent o2) {
 	sf::Rect<float> r1(o1.position->x, o1.position->y, o1.width, o1.height);
 	sf::Rect<float> r2(o2.position->x, o2.position->y, o2.width, o2.height);
 	return r1.intersects(r2);
+};
+
+bool collide(EntityId e1, EntityId e2, World& world) {
+	float vx1 = world.mSys.components[e1]->vx;
+	float vx2 = world.mSys.components[e2]->vx;
+	if(vx1 > 0)
+	{
+		world.pSys.components[e1]->x = world.pSys.components[e2]->x - world.hbSys.components[e1]->width;
+	} else if(vx1 < 0) {
+		world.pSys.components[e1]->x = world.pSys.components[e2]->x + world.hbSys.components[e2]->width;
+	} else if(vx1 == 0) {
+		if(vx2 < 0)
+		{
+			world.pSys.components[e1]->x = world.pSys.components[e2]->x - world.hbSys.components[e1]->width;
+		} else if(vx2 > 0) {
+			world.pSys.components[e1]->x = world.pSys.components[e2]->x + world.hbSys.components[e2]->width;
+		}
+	}
+	world.mSys.components[e1]->vx = 0;
+	world.mSys.components[e2]->vx = 0;
+	
 };
 
 #endif

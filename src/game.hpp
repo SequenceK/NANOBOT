@@ -131,6 +131,7 @@ namespace G {
 			float offsetX=0,offsetY=0;
 			float width, height;
 			bool overlaped;
+			bool moveable;
 			HitboxComponent(float ox, float oy, float w, float h, System<PositionComponent>& posSys, EntityId id) : 
 			Component(id), position(posSys.components[id]),	offsetX(ox), offsetY(oy), width(w), height(h) {
 			};
@@ -140,7 +141,7 @@ namespace G {
 	//class InputComponent
 	
 	
-	class Game {
+	class World {
 		public:
 			EntityId eIndex = 0;
 			System<PositionComponent> pSys;

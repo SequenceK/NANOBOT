@@ -29,7 +29,7 @@ std::vector<EntityId> boxes;
 EntityId player;
 bool mouseReleased = true;
 
-void Game::init() {
+void World::init() {
 	player = this->createId();
 	this->pSys.components[player] =  new PositionComponent(20,20,player);
 	this->rSys.components[player] = new RenderComponent("../data/face.png", pSys, player);
@@ -39,8 +39,10 @@ void Game::init() {
 	//this->rSys.components[player]->sprite.setScale(2,2);
 	
 };
-void Game::update(float dt, sf::RenderWindow& window) {
+void World::update(float dt, sf::RenderWindow& window) {
 	this->mSys.components[player]->moving = false;
+	this->mSys.components[player]->ax = 0;
+	this->mSys.components[player]->ay = 0;
 	
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 	{
@@ -55,22 +57,22 @@ void Game::update(float dt, sf::RenderWindow& window) {
 	
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
 		//pSprite->move( 0 , -speed*dt );
-		this->mSys.components[player]->ay = -100;
+		this->mSys.components[player]->ay += -100;
 		this->mSys.components[player]->moving = true;
 	}
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
 		//pSprite->move( 0 , speed*dt );
-		this->mSys.components[player]->ay = 100;
+		this->mSys.components[player]->ay += 100;
 		this->mSys.components[player]->moving = true;
 	}
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
 		//pSprite->move( speed*dt , 0 );
-		this->mSys.components[player]->ax = 100;
+		this->mSys.components[player]->ax += 100;
 		this->mSys.components[player]->moving = true;
 	}
 	if(sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
 		//pSprite->move( -speed*dt , 0 );
-		this->mSys.components[player]->ax = -100;
+		this->mSys.components[player]->ax += -100;
 		this->mSys.components[player]->moving = true;
 	}
 	
@@ -90,6 +92,7 @@ void Game::update(float dt, sf::RenderWindow& window) {
 		{
 			this->hbSys.components[player]->overlaped = true;
 			//this->rSys.components[player]->sprite.setColor(sf::Color(0, 255, 0));
+			collide(player, toCheck[i], *this);
 		} else {
 			//this->rSys.components[player]->sprite.setColor(sf::Color(255, 255, 255));
 		}
@@ -116,7 +119,7 @@ void Game::update(float dt, sf::RenderWindow& window) {
 	
 };
 
-void Game::render(sf::RenderWindow& window) {
+void World::render(sf::RenderWindow& window) {
 	for (auto it = this->rSys.components.begin(); it != this->rSys.components.end(); it++) {
 		window.draw(it->second->sprite);
 	}

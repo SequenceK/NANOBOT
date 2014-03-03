@@ -10,22 +10,23 @@ namespace entities {
 		private:
 			EntityId id;
 		public:
-			Box(float xx, float yy, int width, int height, Game& game) {
-				id = game.createId();
-				game.pSys.components[id] = new PositionComponent(xx, yy, id);
-				game.rSys.components[id] = new RenderComponent("../data/face.png", game.pSys, id);
+			Box(float xx, float yy, int width, int height, World& world) {
+				id = world.createId();
+				world.pSys.components[id] = new PositionComponent(xx, yy, id);
+				world.rSys.components[id] = new RenderComponent("../data/face.png", game.pSys, id);
 			}
 	};
 } */
 
-unsigned long Box(float xx, float yy, Game& game) {
-				EntityId id = game.createId();
-				game.pSys.components[id] = new PositionComponent(xx, yy, id);
-				game.rSys.components[id] = new RenderComponent("../data/face.png", game.pSys, id);
-				game.mSys.components[id] = new MovementComponent(100,100, 0.1, game.pSys, id);
-				game.hbSys.components[id] = new HitboxComponent(0,0,32,32,game.pSys, id);
-				//game.mSys.components[id]->ax = -100;
-				game.mSys.components[id]->moving = true;
+unsigned long Box(float xx, float yy, World& world) {
+				EntityId id = world.createId();
+				world.pSys.components[id] = new PositionComponent(xx, yy, id);
+				world.rSys.components[id] = new RenderComponent("../data/face.png", world.pSys, id);
+				world.mSys.components[id] = new MovementComponent(100,100, 0.1, world.pSys, id);
+				world.hbSys.components[id] = new HitboxComponent(0,0,16,16,world.pSys, id);
+				world.mSys.components[id]->ax = -100;
+				world.mSys.components[id]->moving = true;
+				world.rSys.components[id]->sprite.setScale(0.5, 0.5);
 				return id;
 };
 }

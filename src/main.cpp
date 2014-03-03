@@ -29,8 +29,8 @@ int main()
 	//posSys.components[p] = new PositionComponent(20,12,p);
 	//rSys.components[p] = new RenderComponent("../data/face.png", posSys, p);
 	
-	G::Game game;
-	game.init();
+	G::World world;
+	world.init();
 	
 	//RenderComponent * pSprite = rSys.components[p]; 
 	//pSprite->sprite.setScale(2,2);
@@ -100,9 +100,9 @@ int main()
         // draw everything here...
         // window.draw(...);
 		//window.draw(s);
-		//window.draw(game.rSys.components[game.player]->sprite);
-		game.update(dt, window);
-		game.render(window);
+		//window.draw(world.rSys.components[world.player]->sprite);
+		world.update(dt, window);
+		world.render(window);
         // end the current frame
         window.display();
 		
