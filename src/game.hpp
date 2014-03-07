@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 #include <cmath>
+#include <iostream>
 
 /*
 
@@ -35,8 +36,12 @@ namespace G {
 
 	typedef unsigned long EntityId;
 	static EntityId INDEX = 1;
-	static int WIN_H = 768;
-	static int WIN_W = 1366;
+	static int WIN_H = 768/2;
+	static int WIN_W = 1366/2;
+	
+	enum Touching {
+		TOP=0, LEFT, BOTTOM, RIGHT
+	};
 
 	
 	class Component {
@@ -101,13 +106,14 @@ namespace G {
 			MovementComponent(float mvx, float mvy, float d, System<PositionComponent>& posSys, EntityId id) : maxVx(mvx), maxVy(mvy), drag(d), Component(id), position(posSys.components[owner]) {
 			};
 			void update(float dt) {
-				if(!moving) {
+				/* if(!moving) {
 					ax = 0;
 					ay = 0;
-				}
+				} */
 				position->setPosition(position->x + vx*dt, position->y + vy*dt);
-				vx += ax/dt - vx*drag;
-				vy += ay/dt - vy*drag;
+				vx += ax*dt;// - vx*drag;
+				vy += ay*dt;// - vy*drag;
+				//std::cout << ax <<"\n";
 				if((std::abs(vx) > std::abs(maxVx))) {
 					if( vx < 0 ){
 						vx = -maxVx;
@@ -132,8 +138,9 @@ namespace G {
 			float width, height;
 			bool overlaped;
 			bool moveable;
-			HitboxComponent(float ox, float oy, float w, float h, System<PositionComponent>& posSys, EntityId id) : 
-			Component(id), position(posSys.components[id]),	offsetX(ox), offsetY(oy), width(w), height(h) {
+			Touching touching;
+			HitboxComponent(float ox, float oy, float w, float h, System<PositionComponent>& posSys, EntityId id, bool m=true) : 
+			Component(id), position(posSys.components[id]),	offsetX(ox), offsetY(oy), width(w), height(h), moveable(m) {
 			};
 			
 	};	

@@ -11,8 +11,8 @@ using namespace G;
 
 class QuadTree {
 	private:
-		int MAX_ENTITIES = 8;
-		int MAX_LEVELS = 5;
+		int MAX_ENTITIES = 4;
+		int MAX_LEVELS = 8;
 		int level;
 		std::vector<EntityId> entities;
 		std::vector<QuadTree *> nodes;
@@ -49,7 +49,7 @@ class QuadTree {
 			float hMid = bounds.top + bounds.height/2;
 			
 			bool topQ = (rect.position->y < hMid && rect.position->y+rect.height < hMid);
-			bool bottomQ = (rect.position->y > hMid);
+			bool bottomQ = (rect.position->y >= hMid);
 			
 			if(rect.position->x < vMid && rect.position->x+rect.width < vMid) {
 				if(topQ) {
@@ -58,7 +58,7 @@ class QuadTree {
 					index = 2;
 				}
 			}
-			if(rect.position->x > vMid) {
+			if(rect.position->x >= vMid) {
 				if(topQ) {
 					index = 1;
 				} else if (bottomQ) {
@@ -223,23 +223,73 @@ bool overlap(HitboxComponent o1, HitboxComponent o2) {
 };
 
 bool collide(EntityId e1, EntityId e2, World& world) {
-	float vx1 = world.mSys.components[e1]->vx;
-	float vx2 = world.mSys.components[e2]->vx;
-	if(vx1 > 0)
-	{
-		world.pSys.components[e1]->x = world.pSys.components[e2]->x - world.hbSys.components[e1]->width;
-	} else if(vx1 < 0) {
-		world.pSys.components[e1]->x = world.pSys.components[e2]->x + world.hbSys.components[e2]->width;
-	} else if(vx1 == 0) {
-		if(vx2 < 0)
-		{
-			world.pSys.components[e1]->x = world.pSys.components[e2]->x - world.hbSys.components[e1]->width;
-		} else if(vx2 > 0) {
-			world.pSys.components[e1]->x = world.pSys.components[e2]->x + world.hbSys.components[e2]->width;
+	if(world.hbSys.components[e1]->moveable) {
+		/* float vx1 = world.mSys.components[e1]->vx;
+		float vx2 = world.mSys.components[e2]->vx;
+		float vy1 = world.mSys.components[e1]->vy;
+		float vy2 = world.mSys.components[e2]->vy; */
+		float ax1 = world.mSys.components[e2]->ax;//vx1 + vx2;
+		float ay1 = world.mSys.components[e2]->ay;//vy1 + vy2;
+		float ax2 = world.mSys.components[e2]->ax;//vx1 + vx2;
+		float ay2 = world.mSys.components[e2]->ay;//vy1 + vy2;
+		float slope2 = world.hbSys.components[e2]->height/world.hbSys.components[e2]->width;
+		bool top = false, bot = false, right = false, left = false;
+		float y1h = world.pSys.components[e1]->y + world.hbSys.components[e1]->height/2;
+		float y2h = world.pSys.components[e2]->y + world.hbSys.components[e2]->height/2;
+		float x1h = world.pSys.components[e1]->x + world.hbSys.components[e1]->width/2;
+		float x2h = world.pSys.components[e2]->x + world.hbSys.components[e2]->width/2;
+		if(y1h > slope2*(x1h) + (0-slope2*(x2h)) + y2h) {
+			if(y1h > (-slope2)*(x1h) + (0-(-slope2)*(x2h)) + y2h) {
+				world.hbSys.components[e2]->touching = BOTTOM;
+				bot = true;
+			} else {
+				world.hbSys.components[e2]->touching = LEFT;
+				left = true;
+			}
+		} else {
+			if(y1h > (-slope2)*(x1h) + (0-(-slope2)*(x2h)) + y2h) {
+				world.hbSys.components[e2]->touching = RIGHT;
+				right = true;
+			} else {
+				world.hbSys.components[e2]->touching = TOP;
+				top = true;
+			}	
 		}
+		float e = 0;
+		if(left || right) {
+			if(right){
+				float d = (world.pSys.components[e2]->x + world.hbSys.components[e2]->width) - world.pSys.components[e1]->x;
+				world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x + d + e,world.pSys.components[e1]->y);
+			}
+			if(left){
+				float d = world.pSys.components[e2]->x - (world.pSys.components[e1]->x + world.hbSys.components[e1]->width);
+				world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x + d - e,world.pSys.components[e1]->y );
+			}
+			//world.mSys.components[e1]->vx = -world.mSys.components[e1]->vx * 0;
+			if(world.hbSys.components[e2]->moveable)
+			world.mSys.components[e2]->ax = ax1;
+			world.mSys.components[e1]->ax = ax2;
+		} else if (top || bot) {
+			if(bot){
+				float d = (world.pSys.components[e2]->y + world.hbSys.components[e2]->height) - world.pSys.components[e1]->y;
+				world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x , world.pSys.components[e1]->y + d + e);
+			}
+			if(top){
+				float d = world.pSys.components[e2]->y - (world.pSys.components[e1]->y + world.hbSys.components[e1]->height);
+				//world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x + (d/vy1)*vx1, world.pSys.components[e1]->y + d);
+				world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x, world.pSys.components[e1]->y + d - e);
+			}
+			//world.mSys.components[e1]->vy = -world.mSys.components[e1]->vy * 0;
+			if(world.hbSys.components[e2]->moveable)
+			world.mSys.components[e2]->ay = ay1;
+			world.mSys.components[e1]->ay = ay2;
+		}
+	
 	}
-	world.mSys.components[e1]->vx = 0;
-	world.mSys.components[e2]->vx = 0;
+	
+	//world.mSys.components[e2]->vx = -world.mSys.components[e2]->vx;
+	//world.mSys.components[e1]->vy = -world.mSys.components[e1]->vy * 0.2;
+	//world.mSys.components[e2]->vy = -world.mSys.components[e2]->vy;
 	
 };
 

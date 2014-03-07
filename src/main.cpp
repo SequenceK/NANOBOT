@@ -14,8 +14,8 @@ int main()
 	
 	
     // create the window
-    sf::RenderWindow window(sf::VideoMode(G::WIN_W, G::WIN_H), "SFML TEST", sf::Style::Fullscreen, settings);
-	window.setVerticalSyncEnabled(true);
+    sf::RenderWindow window(sf::VideoMode(G::WIN_W, G::WIN_H), "SFML TEST", sf::Style::Close, settings);
+	//window.setVerticalSyncEnabled(true);
 	window.setFramerateLimit(60);
 	
 	sf::Texture texture;
@@ -46,13 +46,19 @@ int main()
 	//s.scale(2,2);
 	//s.setTexture(texture);
 	//s.setTextureRect(sf::IntRect(10,10,50,50));
-	
-	int speed = 100;
+	sf::Font font;
+	font.loadFromFile("../data/fonts/PressStart2P.ttf");
+	sf::Text FPS;
+	FPS.setFont(font);
+	FPS.setColor(sf::Color::White);
+	FPS.setCharacterSize(12);
 	
     // run the program as long as the window is open
     while (window.isOpen()) {
 		sf::Time e = clock.restart();
 		float dt = e.asSeconds();
+		std::string s = std::to_string(1.f/dt); 
+		FPS.setString("FPS: " + s);
         // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -103,6 +109,7 @@ int main()
 		//window.draw(world.rSys.components[world.player]->sprite);
 		world.update(dt, window);
 		world.render(window);
+		window.draw(FPS);
         // end the current frame
         window.display();
 		

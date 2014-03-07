@@ -22,11 +22,12 @@ unsigned long Box(float xx, float yy, World& world) {
 				EntityId id = world.createId();
 				world.pSys.components[id] = new PositionComponent(xx, yy, id);
 				world.rSys.components[id] = new RenderComponent("../data/face.png", world.pSys, id);
-				world.mSys.components[id] = new MovementComponent(100,100, 0.1, world.pSys, id);
-				world.hbSys.components[id] = new HitboxComponent(0,0,16,16,world.pSys, id);
-				world.mSys.components[id]->ax = -100;
-				world.mSys.components[id]->moving = true;
-				world.rSys.components[id]->sprite.setScale(0.5, 0.5);
+				world.mSys.components[id] = new MovementComponent(100,100, 0.4, world.pSys, id);
+				world.hbSys.components[id] = new HitboxComponent(0,0,32,32,world.pSys, id);
+				//world.mSys.components[id]->ax = -100;
+				//world.mSys.components[id]->moving = true;
+				world.rSys.components[id]->sprite.setScale(1, 1);
+				world.hbSys.components[id]->moveable = false;
 				return id;
 };
 }
