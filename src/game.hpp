@@ -36,11 +36,12 @@ namespace G {
 
 	typedef unsigned long EntityId;
 	static EntityId INDEX = 1;
-	static int WIN_H = 768/2;
-	static int WIN_W = 1366/2;
+	static int WIN_H = 768;
+	static int WIN_W = 1366;
+	static float elapsed = 0;
 	
 	enum Touching {
-		TOP=0, LEFT, BOTTOM, RIGHT
+		NONE = 0x0000, UP=0x0001, LEFT=0x0100, DOWN=0x0010, RIGHT=0x1000
 	};
 
 	
@@ -57,33 +58,54 @@ namespace G {
 
 	class PositionComponent : public Component {
 		public:
-			float x, y;
-			float dx, dy;
-			bool changed;
-			PositionComponent(float xx, float yy, EntityId id) : x(xx), y(yy), Component(id) {};
+			float x=0, y=0;
+			float dx=0, dy=0;
+			//bool changed;
+			PositionComponent(float xx, float yy, EntityId id) : x(xx), y(yy), dx(xx), dy(yy), Component(id) {};
 			void setPosition(float xx, float yy) {
+				//std::cout << dy << " " << y << "\n";
+				//if( xx != x) {
+					dx = x;
+				//}
+				//if( yy != y) {
+					dy = y;
+				//}
 				x = xx;
 				y = yy;
-				if( dx != x || dy != y) {
-					changed = true;
-				} else {
-					changed = false;
-				}
-				dx = x;
-				dy = y;
 			};
 	};
 	
 	class RenderComponent : public Component {
 		public :
+		
+			struct Animation {
+				std::vector<int> frames={0};
+				int currentFrame=0;
+				int currentIt = 0;
+				float speed=1;
+				bool loop=true;
+				bool played=false;
+			};
+			
+			enum Facing { LEFT=false, RIGHT=true };
+		
+			Animation currentAnimation;
+			bool playingAnimation = false;
+			bool facing = RIGHT;
 			PositionComponent * position;
 			sf::Sprite sprite;
 			sf::Texture texture;
+			//std::map<std::String, std::vector<std::vector<int>> animations;
+			int frameWidth=0, frameHeight=0;
 			float offsetX=0, offsetY=0;
+			float frameTimer=0;
 			RenderComponent(const std::string & filename, System<PositionComponent>& posSys, EntityId id) : Component(id), position(posSys.components[owner]) {
 				texture.loadFromFile(filename);
 				sprite.setTexture(texture);
 				sprite.setPosition(position->x + offsetX, position->y + offsetY);
+				if(frameWidth!=0&&frameHeight!=0){
+					sprite.setTextureRect(sf::IntRect(0,0,frameWidth, frameHeight));
+				}
 			};
 			RenderComponent(float ox, float oy, const std::string & filename, System<PositionComponent>& posSys, EntityId id) : offsetX(ox), offsetY(oy), Component(id), position(posSys.components[owner]) {
 				texture.loadFromFile(filename);
@@ -91,9 +113,42 @@ namespace G {
 				sprite.setPosition(position->x + offsetX, position->y + offsetY);
 			};
 			
-			void update() {
+			void update(float dt) {
+				if(playingAnimation) {
+					frameTimer += dt;
+					if(frameTimer >= 1/currentAnimation.speed) {
+						currentAnimation.currentFrame = currentAnimation.frames[currentAnimation.currentIt];
+						currentAnimation.currentIt++;
+						int fY = int(currentAnimation.currentFrame/(sprite.getTexture()->getSize().x/frameWidth));
+						sprite.setTextureRect(sf::IntRect((facing?0:frameWidth) + frameWidth*currentAnimation.currentFrame,frameHeight*fY,(facing?1:-1)*frameWidth,frameHeight));
+						if(currentAnimation.currentIt >= currentAnimation.frames.size())
+						{
+							currentAnimation.currentIt = 0;
+							if(!currentAnimation.loop) {
+								playingAnimation = false;
+							}
+						}
+						frameTimer = 0;
+					}
+				}
 				sprite.setPosition(position->x + offsetX, position->y + offsetY);
 			};
+			
+			void playAnimation(std::vector<int> f, float s, bool loop, bool force=false){
+				if(!playingAnimation || force) {
+					currentAnimation.frames = f;
+					currentAnimation.speed = s;
+					currentAnimation.loop = loop;
+					currentAnimation.currentIt = 0;
+					playingAnimation = true;
+					frameTimer = 1/s;
+				}
+				
+			};
+			
+			
+			
+			//void addAnimation(std::String name, std::vector<int> frames, int framespeed, bool loop);
 			
 			
 	};
@@ -101,9 +156,9 @@ namespace G {
 	class MovementComponent : public Component {
 		public :
 			PositionComponent * position;
-			float vx=0, vy=0, ax=0, ay=0, maxVx=0, maxVy=0, drag = 0;
+			float vx=0, vy=0, ax=0, ay=0, maxVx=0, maxVy=0, dragx = 0, dragy = 0;
 			bool moving = false;
-			MovementComponent(float mvx, float mvy, float d, System<PositionComponent>& posSys, EntityId id) : maxVx(mvx), maxVy(mvy), drag(d), Component(id), position(posSys.components[owner]) {
+			MovementComponent(float mvx, float mvy, float dx, float dy, System<PositionComponent>& posSys, EntityId id) : maxVx(mvx), maxVy(mvy), dragx(dx), dragy(dy), Component(id), position(posSys.components[owner]) {
 			};
 			void update(float dt) {
 				/* if(!moving) {
@@ -111,8 +166,32 @@ namespace G {
 					ay = 0;
 				} */
 				position->setPosition(position->x + vx*dt, position->y + vy*dt);
-				vx += ax*dt;// - vx*drag;
-				vy += ay*dt;// - vy*drag;
+				if(ax != 0) {
+					vx += ax * dt;
+				} else if(dragx != 0) {
+					if(vx - dragx > 0) {
+						vx = vx - dragx;
+					} else if (vx + dragx < 0) {
+						vx += dragx;
+					} else {
+						vx = 0;
+					}
+				}
+				if(ay != 0) {
+					vy += ay * dt;
+				} else if(dragy != 0) {
+					if(vy - dragy > 0) {
+						vy = vy - dragy;
+					} else if (vy + dragy < 0) {
+						vy += dragy;
+					} else {
+						vy = 0;
+					}
+				}
+				//vx += (ax - vx*dragx);
+				//vy += (ay - vy*dragy);
+				/* vx = vx - vx*drag;
+				vy = vy - vy*drag; */
 				//std::cout << ax <<"\n";
 				if((std::abs(vx) > std::abs(maxVx))) {
 					if( vx < 0 ){
@@ -137,10 +216,13 @@ namespace G {
 			float offsetX=0,offsetY=0;
 			float width, height;
 			bool overlaped;
-			bool moveable;
-			Touching touching;
-			HitboxComponent(float ox, float oy, float w, float h, System<PositionComponent>& posSys, EntityId id, bool m=true) : 
-			Component(id), position(posSys.components[id]),	offsetX(ox), offsetY(oy), width(w), height(h), moveable(m) {
+			bool immovable;
+			int touching = NONE;
+			HitboxComponent(float ox, float oy, float w, float h, System<PositionComponent>& posSys, EntityId id, bool m=false) : 
+			Component(id), position(posSys.components[id]),	offsetX(ox), offsetY(oy), width(w), height(h), immovable(m) {
+			};
+			void update(){
+				touching = NONE;
 			};
 			
 	};	
@@ -157,7 +239,7 @@ namespace G {
 			System<HitboxComponent> hbSys;
 			EntityId player;
 			sf::RenderWindow * window;
-			
+			bool paused=false;
 			
 			void update(float dt, sf::RenderWindow& window);
 			void init();

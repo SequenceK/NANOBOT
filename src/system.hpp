@@ -1,4 +1,4 @@
-#ifndef SYSTEM_HPP
+﻿#ifndef SYSTEM_HPP
 #define SYSTEM_HPP
 #include "game.hpp"
 #include <vector>
@@ -8,6 +8,10 @@
 #include <SFML/Window.hpp>
 
 using namespace G;
+
+bool seperateX(EntityId e1, EntityId e2, World& world);
+bool seperateY(EntityId e1, EntityId e2, World& world);
+
 
 class QuadTree {
 	private:
@@ -216,81 +220,145 @@ class QuadTree {
 		
 };
 
-bool overlap(HitboxComponent o1, HitboxComponent o2) {
+bool overlap(HitboxComponent o1, HitboxComponent o2,float &area) {
 	sf::Rect<float> r1(o1.position->x, o1.position->y, o1.width, o1.height);
 	sf::Rect<float> r2(o2.position->x, o2.position->y, o2.width, o2.height);
-	return r1.intersects(r2);
+	sf::Rect<float> intRect;
+	
+	if(r1.intersects(r2, intRect)){
+		area = intRect.width * intRect.height;
+		return true;
+	} else {
+		area = 0;
+		return false;
+	}
+};
+bool overlap(float x, float y, HitboxComponent o2) {
+	sf::Rect<float> r2(o2.position->x, o2.position->y, o2.width, o2.height);
+	return r2.contains(x, y);
 };
 
+bool xTy = false;
+
 bool collide(EntityId e1, EntityId e2, World& world) {
-	if(world.hbSys.components[e1]->moveable) {
-		/* float vx1 = world.mSys.components[e1]->vx;
-		float vx2 = world.mSys.components[e2]->vx;
-		float vy1 = world.mSys.components[e1]->vy;
-		float vy2 = world.mSys.components[e2]->vy; */
-		float ax1 = world.mSys.components[e2]->ax;//vx1 + vx2;
-		float ay1 = world.mSys.components[e2]->ay;//vy1 + vy2;
-		float ax2 = world.mSys.components[e2]->ax;//vx1 + vx2;
-		float ay2 = world.mSys.components[e2]->ay;//vy1 + vy2;
-		float slope2 = world.hbSys.components[e2]->height/world.hbSys.components[e2]->width;
-		bool top = false, bot = false, right = false, left = false;
-		float y1h = world.pSys.components[e1]->y + world.hbSys.components[e1]->height/2;
-		float y2h = world.pSys.components[e2]->y + world.hbSys.components[e2]->height/2;
-		float x1h = world.pSys.components[e1]->x + world.hbSys.components[e1]->width/2;
-		float x2h = world.pSys.components[e2]->x + world.hbSys.components[e2]->width/2;
-		if(y1h > slope2*(x1h) + (0-slope2*(x2h)) + y2h) {
-			if(y1h > (-slope2)*(x1h) + (0-(-slope2)*(x2h)) + y2h) {
-				world.hbSys.components[e2]->touching = BOTTOM;
-				bot = true;
-			} else {
-				world.hbSys.components[e2]->touching = LEFT;
-				left = true;
+		seperateX(e1, e2, world);
+		seperateY(e1, e2, world);
+};
+
+
+
+const int BIAS = 4;
+
+bool seperateX(EntityId e1, EntityId e2, World& world) {
+	bool e1Immovable = world.hbSys.components[e1]->immovable;
+	bool e2Immovable = world.hbSys.components[e2]->immovable;
+	if(e1Immovable && e2Immovable) {
+		return false;
+	}
+	float overlap = 0;
+	float d1 = world.pSys.components[e1]->x - world.pSys.components[e1]->dx;
+	float d2 = world.pSys.components[e2]->x - world.pSys.components[e2]->dx;
+	if(d1 != d2) {
+		float absD1 = (d1>0)?d1:-d1;
+		float absD2 = (d2>0)?d2:-d2;
+		sf::Rect<float> rect1(world.pSys.components[e1]->x - ((d1>0)?d1:0), world.pSys.components[e1]->y, world.hbSys.components[e1]->width + absD1, world.hbSys.components[e1]->height);
+		sf::Rect<float> rect2(world.pSys.components[e2]->x - ((d2>0)?d2:0), world.pSys.components[e2]->y, world.hbSys.components[e2]->width + absD2, world.hbSys.components[e2]->height);
+		if((rect1.left < rect2.left + rect2.width) && (rect1.left + rect1.width > rect2.left) && (rect1.top < rect2.top + rect2.height) && ( rect1.top + rect1.height > rect2.top)){
+			float maxOverlap = absD1 + absD2 + BIAS;
+			if(d1 > d2) {
+				overlap = world.pSys.components[e1]->x + world.hbSys.components[e1]->width - world.pSys.components[e2]->x;
+				if((overlap > maxOverlap)){
+					overlap = 0;
+				} else {
+					world.hbSys.components[e1]->touching |= RIGHT;
+					world.hbSys.components[e2]->touching |= LEFT;
+				}
+			} else if (d1 < d2) {
+				overlap = world.pSys.components[e1]->x - world.hbSys.components[e2]->width - world.pSys.components[e2]->x;
+				if((-overlap > maxOverlap)){
+					overlap = 0;
+				} else {
+					world.hbSys.components[e2]->touching |= RIGHT;
+					world.hbSys.components[e1]->touching |= LEFT;
+				}
 			}
-		} else {
-			if(y1h > (-slope2)*(x1h) + (0-(-slope2)*(x2h)) + y2h) {
-				world.hbSys.components[e2]->touching = RIGHT;
-				right = true;
-			} else {
-				world.hbSys.components[e2]->touching = TOP;
-				top = true;
-			}	
 		}
-		float e = 0;
-		if(left || right) {
-			if(right){
-				float d = (world.pSys.components[e2]->x + world.hbSys.components[e2]->width) - world.pSys.components[e1]->x;
-				world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x + d + e,world.pSys.components[e1]->y);
-			}
-			if(left){
-				float d = world.pSys.components[e2]->x - (world.pSys.components[e1]->x + world.hbSys.components[e1]->width);
-				world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x + d - e,world.pSys.components[e1]->y );
-			}
-			//world.mSys.components[e1]->vx = -world.mSys.components[e1]->vx * 0;
-			if(world.hbSys.components[e2]->moveable)
-			world.mSys.components[e2]->ax = ax1;
-			world.mSys.components[e1]->ax = ax2;
-		} else if (top || bot) {
-			if(bot){
-				float d = (world.pSys.components[e2]->y + world.hbSys.components[e2]->height) - world.pSys.components[e1]->y;
-				world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x , world.pSys.components[e1]->y + d + e);
-			}
-			if(top){
-				float d = world.pSys.components[e2]->y - (world.pSys.components[e1]->y + world.hbSys.components[e1]->height);
-				//world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x + (d/vy1)*vx1, world.pSys.components[e1]->y + d);
-				world.pSys.components[e1]->setPosition(world.pSys.components[e1]->x, world.pSys.components[e1]->y + d - e);
-			}
-			//world.mSys.components[e1]->vy = -world.mSys.components[e1]->vy * 0;
-			if(world.hbSys.components[e2]->moveable)
-			world.mSys.components[e2]->ay = ay1;
-			world.mSys.components[e1]->ay = ay2;
+	}
+	if(overlap != 0) {
+		
+		if(!e1Immovable && !e2Immovable) {
+		
+		} else if(!e1Immovable) {
+			world.pSys.components[e1]->x -= overlap;
+			world.mSys.components[e1]->vx = world.mSys.components[e2]->vx;
+		} else if(!e2Immovable) {
+			world.pSys.components[e2]->x += overlap;
+			world.mSys.components[e2]->vx = world.mSys.components[e1]->vx;
 		}
-	
+		
+		return true;
+	} else {
+		return false;
 	}
 	
-	//world.mSys.components[e2]->vx = -world.mSys.components[e2]->vx;
-	//world.mSys.components[e1]->vy = -world.mSys.components[e1]->vy * 0.2;
-	//world.mSys.components[e2]->vy = -world.mSys.components[e2]->vy;
+};
+
+bool seperateY(EntityId e1, EntityId e2, World& world) {
+	bool e1Immovable = world.hbSys.components[e1]->immovable;
+	bool e2Immovable = world.hbSys.components[e2]->immovable;
+	if(e1Immovable && e2Immovable) {
+		return false;
+	}
+	float overlap = 0;
+	float d1 = world.pSys.components[e1]->y - world.pSys.components[e1]->dy;
+	float d2 = world.pSys.components[e2]->y - world.pSys.components[e2]->dy;
+	if(d1 != d2) {
+		float absD1 = (d1>0)?d1:-d1;
+		float absD2 = (d2>0)?d2:-d2;
+		sf::Rect<float> rect1(world.pSys.components[e1]->x, world.pSys.components[e1]->y - ((d1>0)?d1:0), world.hbSys.components[e1]->width, world.hbSys.components[e1]->height  + absD1);
+		sf::Rect<float> rect2(world.pSys.components[e2]->x, world.pSys.components[e2]->y - - ((d2>0)?d2:0), world.hbSys.components[e2]->width, world.hbSys.components[e2]->height + absD2);
+		if((rect1.left < rect2.left + rect2.width) && (rect1.left + rect1.width > rect2.left) && (rect1.top < rect2.top + rect2.height) && ( rect1.top + rect1.height > rect2.top)) {
+			float maxOverlap = absD1 + absD2 + BIAS;
+			if(d1 > d2) {
+				overlap = world.pSys.components[e1]->y + world.hbSys.components[e1]->height - world.pSys.components[e2]->y;
+				if((overlap > maxOverlap)){
+					overlap = 0;
+				} else {
+					world.hbSys.components[e1]->touching |= DOWN;
+					world.hbSys.components[e2]->touching |= UP;
+				}
+			} else if (d1 < d2) {
+				overlap = world.pSys.components[e1]->y - world.hbSys.components[e2]->height - world.pSys.components[e2]->y;
+				if((-overlap > maxOverlap)){
+					overlap = 0;
+				} else {
+					world.hbSys.components[e2]->touching |= DOWN;
+					world.hbSys.components[e1]->touching |= UP;
+				}
+			}
+			
+		}
+	}
+	if(overlap != 0) {
+		
+		if(!e1Immovable && !e2Immovable) {
+		
+		} else if(!e1Immovable) {
+			world.pSys.components[e1]->y -= overlap;
+			world.mSys.components[e1]->vy = world.mSys.components[e2]->vy;
+		} else if(!e2Immovable) {
+			world.pSys.components[e2]->y += overlap;
+			world.mSys.components[e2]->vy = world.mSys.components[e1]->vy;
+		}
+		
+		return true;
+	} else {
+		return false;
+	}
 	
 };
+
+
+	
 
 #endif
